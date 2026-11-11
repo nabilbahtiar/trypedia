@@ -9,6 +9,11 @@ import NavigationLoader from "@/components/NavigationLoader";
 export const metadata: Metadata = {
   title: "TryPedia - Marketplace Sewa ke Beli (Rent to Own) Pertama di Jember",
   description: "Platform marketplace jual beli barang bekas dengan konsep Rent to Own di Jember. Coba dulu sewa barangnya, biaya sewa langsung memotong harga beli!",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default async function RootLayout({
