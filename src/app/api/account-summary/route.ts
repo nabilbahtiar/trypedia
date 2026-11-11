@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server";
+import { getVerifiedSessionUser } from "@/lib/auth-session";
+import { query } from "@/lib/db";
+export async function GET(){const user=await getVerifiedSessionUser();if(!user)return NextResponse.json({},{status:401});const [row]=await query(`SELECT COALESCE((SELECT balance FROM user_wallets WHERE user_id=$1),0) AS wallet,COALESCE((SELECT balance FROM user_coins WHERE user_id=$1),0) AS coin,(SELECT COUNT(*)::int FROM chat_messages WHERE receiver_id=$1 AND NOT is_read) AS "unreadChat",(SELECT COUNT(*)::int FROM cart_items WHERE user_id=$1) AS "cartCount",(SELECT COUNT(*)::int FROM notifications WHERE user_id=$1 AND NOT is_read) AS "unreadCount"`,[user.id]);return NextResponse.json({...row,isVerified:user.isVerified,wallet:Number(row.wallet),coin:Number(row.coin)},{headers:{'Cache-Control':'private,no-store'}});}

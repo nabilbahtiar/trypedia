@@ -1,0 +1,108 @@
+const fs=require('fs'),assert=require('node:assert/strict'),{Client}=require('pg');
+for(const f of ['.env.local','.env'])if(fs.existsSync(f))process.loadEnvFile(f);
+const db=new Client({connectionString:process.env.DATABASE_URL||`postgresql://${process.env.DB_USER||'postgres'}:${encodeURIComponent(process.env.DB_PASSWORD||'postgres')}@${process.env.DB_HOST||'localhost'}:${process.env.DB_PORT||5432}/${process.env.DB_NAME||'trypedia_db'}`});
+const key='finance_'+Date.now(),buyer=key+'_b',seller=key+'_s',product=key+'_p',order=key+'_o',rejectedOrder=key+'_r';
+let buyerCookie='',adminCookie='';const requestIds=[];
+const proof='/api/media/proofs/finance-test.webp';
+async function api(path,method='GET',body,cookie=buyerCookie){const r=await fetch('http://localhost:3000'+path,{method,headers:{'Content-Type':'application/json','x-forwarded-for':key,cookie},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(20000)});return{status:r.status,data:await r.json(),response:r};}
+async function login(email,password){const result=await api('/api/auth/login','POST',{email,password},'');assert.equal(result.status,200,JSON.stringify(result.data));return result.response.headers.getSetCookie().map(s=>s.split(';')[0]).join('; ');}
+async function balance(id=buyer){return Number((await db.query('SELECT balance FROM user_wallets WHERE user_id=$1',[id])).rows[0].balance);}
+async function admin(kind,id,decision='APPROVE',reason='',reference=''){return api('/api/admin/finance','POST',{kind,id,decision,reason,reference},adminCookie);}
+async function createRequest(kind,amount,extra={}){const result=await api('/api/wallet/requests','POST',{kind,amount,idempotencyKey:key+'_'+requestIds.length,...extra});assert.equal(result.status,200,JSON.stringify(result.data));requestIds.push(result.data.id);return result.data.id;}
+(async()=>{await db.connect();try{
+ for(const id of [buyer,seller])await db.query(`INSERT INTO users SELECT (jsonb_populate_record(NULL::users,to_jsonb(u)||$1::jsonb)).* FROM users u WHERE role='USER' LIMIT 1`,[JSON.stringify({id,name:id,email:id+'@example.invalid',password:'finance-test123',role:'USER',is_verified:true})]);
+ await db.query(`INSERT INTO stores SELECT (jsonb_populate_record(NULL::stores,to_jsonb(s)||$1::jsonb||jsonb_build_object('id',nextval(pg_get_serial_sequence('stores','id'))))).* FROM stores s LIMIT 1`,[JSON.stringify({user_id:seller,store_name:seller})]);
+ await db.query(`INSERT INTO products SELECT (jsonb_populate_record(NULL::products,to_jsonb(p)||$1::jsonb)).* FROM products p LIMIT 1`,[JSON.stringify({id:product,seller_id:seller,name:'Finance test product',buy_price:1000000,rent_price_daily:10000,rent_price_3d:28000,rent_price_7d:58000,stock:1})]);
+ await db.query('INSERT INTO user_wallets(user_id,balance) VALUES($1,1000000),($2,0)',[buyer,seller]);
+ buyerCookie=await login(buyer+'@example.invalid','finance-test123');adminCookie=await login('superadmin@gmail.com','superadmin');
+ const tomorrow=new Date(Date.now()+7*3600000+86400000).toISOString().slice(0,10);
+ const checkout={productId:product,deliveryOption:'pickup',codDate:tomorrow,codTime:'10:00',shippingFee:0};
+ for(const deliveryOption of ['pickup','cod','delivery']){
+  const invalid={...checkout,deliveryOption,codDate:'2000-01-01'};
+  assert.equal((await api('/api/checkout/validate','POST',invalid)).status,400);
+  assert.equal((await api('/api/wallet/pay','POST',{orderId:key+'_bad',amount:1000,checkout:invalid})).status,400);
+ }
+ assert.equal(await balance(),1000000,'invalid schedule never debits wallet');
+ for(const id of [buyer,seller])await db.query(`INSERT INTO user_addresses(id,user_id,recipient_name,phone,province_city_district,street_address,latitude,longitude,is_primary,is_shop_address) VALUES($1,$2,'Test','0','Jember','Test',-8.16,113.71,true,$3)`,[id+'_addr',id,id===seller]);
+ const delivery={...checkout,deliveryOption:'delivery',deliveryAddressId:buyer+'_addr',shippingFee:6000};
+ assert.equal((await api('/api/checkout/validate','POST',delivery)).data.shippingFee,6000);
+ assert.equal((await api('/api/checkout/validate','POST',{...delivery,shippingFee:10000})).status,400,'static or forged fee rejected');
+ assert.equal((await api('/api/checkout/validate','POST',{...delivery,deliveryAddressId:seller+'_addr'})).status,400,'other users address rejected');
+ await db.query('UPDATE user_addresses SET latitude=-8.21 WHERE user_id=$1',[buyer]);
+ assert.equal((await api('/api/checkout/validate','POST',delivery)).status,400,'address change requires updated fee');
+ await db.query('UPDATE user_addresses SET latitude=-8.16 WHERE user_id=$1',[buyer]);
+ const checkoutPage=await fetch('http://localhost:3000/checkout?id='+product,{headers:{cookie:buyerCookie},signal:AbortSignal.timeout(20000)});
+ assert.equal(checkoutPage.status,200);assert((await checkoutPage.text()).includes('Jadwal Serah-Terima'));
+ assert.equal((await api('/api/admin/finance')).status,403,'customer cannot access admin');
+ const baseline=(await api('/api/admin/finance','GET',null,adminCookie)).data.data;
+ assert.equal(baseline.transactions.reduce((sum,row)=>sum+row.serviceFee,0),baseline.serviceIncome,'transaction service fees reconcile with summary');
+ assert.equal(baseline.transactions.reduce((sum,row)=>sum+row.insuranceFee,0),baseline.insuranceIncome,'transaction insurance fees reconcile with summary');
+ const seeded=baseline.transactions.filter(row=>/^TRY-SEED-8(0[1-9]|1[01])$/.test(row.orderId));
+ assert.equal(seeded.length,11);assert(seeded.every(row=>row.sellerId==='usr_002'&&row.buyerId&&row.insuranceFee>0&&row.serviceFee===2000));
+ const adminPage=await fetch('http://localhost:3000/admin',{headers:{cookie:adminCookie},signal:AbortSignal.timeout(20000)});
+ assert.equal(adminPage.status,200);const adminHtml=await adminPage.text();assert(adminHtml.includes('Rincian Transaksi')&&adminHtml.includes('TRY-SEED-801')&&adminHtml.includes('usr_rev_001'));
+ const topup=await createRequest('TOPUP',50000);assert.equal(await balance(),1000000,'topup does not credit on creation');
+ assert.equal((await api('/api/wallet/requests','PATCH',{id:topup,proofUrl:proof})).status,200);assert.equal(await balance(),1000000,'proof does not credit automatically');
+ const duplicates=await Promise.all([admin('TOPUP',topup),admin('TOPUP',topup)]);assert(duplicates.every(r=>r.status===200));assert.equal(await balance(),1050000,'topup approval credits once');
+ const refused=await createRequest('TOPUP',20000);await api('/api/wallet/requests','PATCH',{id:refused,proofUrl:proof});assert.equal((await admin('TOPUP',refused,'REJECT')).status,400);assert.equal((await admin('TOPUP',refused,'REJECT','Bukti tidak sesuai')).status,200);assert.equal(await balance(),1050000,'rejected topup never credited');
+ const expired=await createRequest('TOPUP',20000);await db.query("UPDATE wallet_requests SET expires_at=NOW()-INTERVAL '1 second' WHERE id=$1",[expired]);assert.equal((await api('/api/wallet/requests','PATCH',{id:expired,proofUrl:proof})).status,409);
+ await api('/api/wallet/requests');
+ const topupHistory=(await api('/api/wallet')).data.transactions;
+ assert.equal(topupHistory.filter(tx=>tx.id==='tx_'+topup&&tx.status==='SUCCESS').length,1);
+ assert.equal(topupHistory.filter(tx=>tx.id==='tx_'+refused&&tx.status==='FAILED').length,1);
+ assert.equal(topupHistory.filter(tx=>tx.id==='tx_'+expired&&tx.status==='FAILED').length,1);
+ assert.equal(await balance(),1050000,'failed and expired top ups leave balance unchanged');
+ const topupPage=await fetch('http://localhost:3000/wallet',{headers:{cookie:buyerCookie},signal:AbortSignal.timeout(20000)});
+ const topupHtml=await topupPage.text();assert(!topupHtml.includes('Permintaan Saldo'),'resolved top ups are only in transaction history');assert(topupHtml.includes('Top up gagal: Bukti tidak sesuai')&&topupHtml.includes('Gagal'));
+ const bank={bankName:'Bank Test',accountNumber:'0012345678',accountName:'Pemilik Uji'};
+ const withdraw=await createRequest('WITHDRAW',100000,bank);assert.equal(await balance(),950000,'withdrawal reserves funds immediately');
+ const duplicateWithdraw=await api('/api/wallet/requests','POST',{kind:'WITHDRAW',amount:100000,idempotencyKey:key+'_3',...bank});assert.equal(duplicateWithdraw.status,200);assert.equal(await balance(),950000,'duplicate withdrawal request does not reserve twice');
+ assert.equal((await admin('WITHDRAW',withdraw,'APPROVE','','TEST-TRANSFER')).status,200);assert.equal((await admin('WITHDRAW',withdraw,'APPROVE','','TEST-TRANSFER')).status,200);assert.equal(await balance(),950000,'completed transfer does not debit twice');
+ const rejectedWithdraw=await createRequest('WITHDRAW',50000,bank);assert.equal(await balance(),900000);await Promise.all([admin('WITHDRAW',rejectedWithdraw,'REJECT','Rekening tidak sesuai'),admin('WITHDRAW',rejectedWithdraw,'REJECT','Rekening tidak sesuai')]);assert.equal(await balance(),950000,'rejection restores reserve once');
+ assert.equal((await api('/api/wallet/requests','POST',{kind:'WITHDRAW',amount:2000000,idempotencyKey:key+'_overspend',...bank})).status,409);
+ const orderData={orderId:order,userId:buyer,userName:buyer,productId:product,productTitle:'Finance test product',productImage:'/images/new-balance-2022r.jpg',sellerName:seller,orderType:'rent',deliveryOption:'pickup',codDate:new Date(Date.now()+7*3600000+86400000).toISOString().slice(0,10),codTime:'16:00',shippingFee:0,paymentMethod:'QRIS',totalPrice:35000,sellerIncome:28000,status:'SEDANG_DIKEMAS',paymentProofUrl:proof,paymentVerified:true,rentDuration:3};
+ assert.equal((await api('/api/orders','POST',orderData)).status,200);let row=(await db.query('SELECT payment_verified,service_fee,insurance_fee FROM orders WHERE order_id=$1',[order])).rows[0];assert.equal(row.payment_verified,false,'customer cannot self-verify through POST');assert.equal(Number(row.service_fee),2000);assert.equal(Number(row.insurance_fee),5000);
+ const confirmationSellerCookie=await login(seller+'@example.invalid','finance-test123');
+ const legacySellerCookie='trypedia_auth_user='+encodeURIComponent(JSON.stringify({id:seller}));
+ const expiredSession=await api('/api/seller/orders','PATCH',{orderId:order,action:'CONFIRM'},legacySellerCookie);
+ assert.equal(expiredSession.status,401);assert(expiredSession.data.message.includes('Silakan masuk ulang'));
+ assert.equal((await api('/api/seller/orders','PATCH',{orderId:order,action:'CONFIRM'})).status,403,'buyer cannot confirm seller order');
+ assert.equal((await api('/api/seller/orders','PATCH',{orderId:order,action:'CONFIRM'},confirmationSellerCookie)).status,409,'unverified QRIS cannot be confirmed');
+ assert.equal((await api('/api/orders','PATCH',{orderId:order,paymentVerified:true,paymentProofUrl:proof})).status,403,'old buyer simulation API blocked');
+ assert.equal((await admin('ORDER',order)).status,200);assert.equal((await admin('ORDER',order)).status,200);assert.equal((await db.query('SELECT payment_verified FROM orders WHERE order_id=$1',[order])).rows[0].payment_verified,true);
+ const confirmations=await Promise.all([api('/api/seller/orders','PATCH',{orderId:order,action:'CONFIRM'},confirmationSellerCookie),api('/api/seller/orders','PATCH',{orderId:order,action:'CONFIRM'},confirmationSellerCookie)]);
+ assert(confirmations.every(result=>result.status===200));assert.equal((await db.query('SELECT status FROM orders WHERE order_id=$1',[order])).rows[0].status,'DIJADWALKAN_DIKIRIM');
+ await db.query("UPDATE orders SET status='DISEWA',rent_started_at=NOW() WHERE order_id=$1",[order]);
+ const purchase=await api('/api/orders/rental-purchase','POST',{orderId:order,expectedAmount:974000,paymentMethod:'qris',proofUrl:proof});assert.equal(purchase.status,200,JSON.stringify(purchase.data));
+ await Promise.all([admin('PURCHASE',order),admin('PURCHASE',order)]);assert.equal(await balance(seller),1000000,'seller only receives remaining product price');assert.equal(await balance(),950000,'external QRIS does not debit wallet');row=(await db.query('SELECT status,total_price FROM orders WHERE order_id=$1',[order])).rows[0];assert.equal(row.status,'SELESAI_DIBELI');assert.equal(Number(row.total_price),1009000);
+ const totals=(await api('/api/admin/finance','GET',null,adminCookie)).data.data;assert.equal(totals.serviceIncome-baseline.serviceIncome,4000);assert.equal(totals.insuranceIncome-baseline.insuranceIncome,5000);assert.equal(totals.totalIncome-baseline.totalIncome,9000,'platform earns fees, not seller proceeds');
+ const details=totals.transactions.filter(row=>row.orderId===order);assert.equal(details.length,2,'rent and conversion have separate transaction details');assert.equal(details.reduce((sum,row)=>sum+row.totalPayment,0),1009000);assert.equal(details.reduce((sum,row)=>sum+row.sellerIncome,0),1000000);assert(details.every(row=>row.sellerId===seller&&row.buyerId===buyer));
+ assert.equal((await api('/api/orders','POST',{...orderData,...delivery,totalPrice:41000,orderId:rejectedOrder,paymentVerified:false,codNotes:'Catatan pengantaran uji'})).status,200);
+ const shipment=(await db.query('SELECT shipping_fee,delivery_distance_km,delivery_address_id,cod_date,cod_time,cod_notes FROM orders WHERE order_id=$1',[rejectedOrder])).rows[0];
+ assert.equal(Number(shipment.shipping_fee),6000);assert.equal(Number(shipment.delivery_distance_km),0);assert.equal(shipment.delivery_address_id,buyer+'_addr');assert.equal(shipment.cod_notes,'Catatan pengantaran uji');assert.equal(shipment.cod_time,'10:00');
+ assert.equal((await admin('ORDER',rejectedOrder,'REJECT','Nominal tidak sesuai')).status,200);assert.equal((await db.query('SELECT status FROM orders WHERE order_id=$1',[rejectedOrder])).rows[0].status,'DIBATALKAN');assert.equal(await balance(),950000,'rejected QRIS never creates wallet refund');
+ assert.equal((await api('/api/wallet/topup','POST',{amount:100000})).status,410,'legacy auto-credit disabled');assert.equal((await api('/api/wallet','DELETE')).status,403,'wallet reset API disabled');
+ const requests=(await api('/api/wallet/requests')).data.requests;assert(requests.some(r=>r.id===withdraw&&r.status==='APPROVED'&&r.transferReference==='TEST-TRANSFER'));assert.equal(requests.find(r=>r.id===withdraw).accountNumber,'0012345678');
+ const walletPage=await fetch('http://localhost:3000/wallet',{headers:{cookie:buyerCookie},signal:AbortSignal.timeout(20000)});assert.equal(walletPage.status,200);assert((await walletPage.text()).includes('Dana sudah ditransfer'));
+ const sellerCookie=await login(seller+'@example.invalid','finance-test123');
+ await db.query("UPDATE orders SET status='DIJADWALKAN_DIKIRIM',payment_verified=true,handover_pin='123456',seller_settled_amount=0 WHERE order_id=$1",[rejectedOrder]);
+ assert.equal((await api('/api/orders/verify-pin','POST',{orderId:rejectedOrder,pin:'123456'})).status,200);
+ assert.equal(await balance(seller),1000000,'rental handover holds funds until completion');
+ const completed=await Promise.all([api('/api/seller/orders','PATCH',{orderId:rejectedOrder,action:'COMPLETE'},sellerCookie),api('/api/seller/orders','PATCH',{orderId:rejectedOrder,action:'COMPLETE'},sellerCookie)]);
+ assert(completed.every(r=>r.status===200),JSON.stringify(completed));
+ assert.equal(await balance(seller),1028000,'rental completion pays product income once without platform fees');
+ await db.query("UPDATE orders SET status='DIJADWALKAN_DIKIRIM',order_type='buy',seller_income=1000000,seller_settled_amount=0 WHERE order_id=$1",[rejectedOrder]);
+ const handovers=await Promise.all([api('/api/orders/verify-pin','POST',{orderId:rejectedOrder,pin:'123456'}),api('/api/orders/verify-pin','POST',{orderId:rejectedOrder,pin:'123456'})]);
+ assert(handovers.every(r=>r.status===200));assert.equal(await balance(seller),2028000,'direct purchase handover pays once without platform fees');
+ console.log('PASS: signed admin/customer authorization, topup pending/approve/reject/expiry, duplicate approval protection, withdrawal reservation/idempotency/completion/rejection/overspending, ordinary QRIS admin approval/rejection, rent-to-own settlement, fee-only platform earnings, disabled legacy bypasses, persisted bank details and live wallet SSR.');
+}finally{
+ await db.query('DELETE FROM admin_audit WHERE target_id=ANY($1::text[])',[[...requestIds,order,rejectedOrder]]);
+ await db.query("DELETE FROM notifications WHERE message LIKE $1 OR message LIKE $2",['%'+buyer+'%','%'+seller+'%']);
+ await db.query('DELETE FROM orders WHERE order_id=ANY($1::text[])',[[order,rejectedOrder]]);
+ await db.query('DELETE FROM wallet_requests WHERE user_id=$1',[buyer]);
+ await db.query('DELETE FROM wallet_transactions WHERE user_id=ANY($1::text[])',[[buyer,seller]]);
+ await db.query('DELETE FROM user_wallets WHERE user_id=ANY($1::text[])',[[buyer,seller]]);
+ await db.query('DELETE FROM user_addresses WHERE user_id=ANY($1::text[])',[[buyer,seller]]);
+ await db.query('DELETE FROM products WHERE id=$1',[product]);await db.query('DELETE FROM stores WHERE user_id=$1',[seller]);await db.query('DELETE FROM users WHERE id=ANY($1::text[])',[[buyer,seller]]);
+ if(adminCookie)await api('/api/auth/logout','POST',null,adminCookie);await db.end();
+}})().catch(error=>{console.error(error);process.exitCode=1;});

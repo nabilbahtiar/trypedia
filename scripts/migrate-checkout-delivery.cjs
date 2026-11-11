@@ -1,0 +1,4 @@
+const fs=require('fs'),{Client}=require('pg');
+for(const file of ['.env.local','.env'])if(fs.existsSync(file))process.loadEnvFile(file);
+const db=new Client({connectionString:process.env.DATABASE_URL||`postgresql://${process.env.DB_USER||'postgres'}:${encodeURIComponent(process.env.DB_PASSWORD||'postgres')}@${process.env.DB_HOST||'localhost'}:${process.env.DB_PORT||5432}/${process.env.DB_NAME||'trypedia_db'}`});
+(async()=>{await db.connect();try{await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_fee NUMERIC(15,2); ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_distance_km NUMERIC(15,6); ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address_id TEXT;`);console.log('Checkout delivery snapshots ready.');}finally{await db.end();}})().catch(error=>{console.error(error);process.exitCode=1});

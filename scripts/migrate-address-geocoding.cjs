@@ -1,0 +1,4 @@
+const fs=require('fs'),{Client}=require('pg');
+for(const file of ['.env.local','.env'])if(fs.existsSync(file))process.loadEnvFile(file);
+const db=new Client({connectionString:process.env.DATABASE_URL||`postgresql://${process.env.DB_USER||'postgres'}:${encodeURIComponent(process.env.DB_PASSWORD||'postgres')}@${process.env.DB_HOST||'localhost'}:${process.env.DB_PORT||5432}/${process.env.DB_NAME||'trypedia_db'}`});
+(async()=>{await db.connect();try{await db.query(`CREATE TABLE IF NOT EXISTS address_geocoding_cache(cache_key TEXT PRIMARY KEY,result JSONB NOT NULL,expires_at TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS address_geocoding_expiry ON address_geocoding_cache(expires_at);`);console.log('Address geocoding cache ready.');}finally{await db.end();}})().catch(error=>{console.error(error);process.exitCode=1});

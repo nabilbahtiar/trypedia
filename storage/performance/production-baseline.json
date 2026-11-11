@@ -1,0 +1,722 @@
+{
+  "origin": "http://localhost:3001",
+  "at": "2026-11-11T13:36:01.134Z",
+  "samples": 5,
+  "routes": [
+    {
+      "route": "/",
+      "statuses": [
+        200
+      ],
+      "firstMs": 554.5,
+      "medianMs": 26.2,
+      "p95Ms": 30,
+      "medianTtfbMs": 22.3,
+      "bytes": 82781
+    },
+    {
+      "route": "/products/new-balance-2022r",
+      "statuses": [
+        200
+      ],
+      "firstMs": 109.2,
+      "medianMs": 30.7,
+      "p95Ms": 44.3,
+      "medianTtfbMs": 28.9,
+      "bytes": 40992
+    },
+    {
+      "route": "/store/usr_002",
+      "statuses": [
+        200
+      ],
+      "firstMs": 58.2,
+      "medianMs": 26,
+      "p95Ms": 43.9,
+      "medianTtfbMs": 22.9,
+      "bytes": 57733
+    },
+    {
+      "route": "/orders",
+      "statuses": [
+        200
+      ],
+      "firstMs": 38,
+      "medianMs": 27.6,
+      "p95Ms": 29.9,
+      "medianTtfbMs": 25.6,
+      "bytes": 48885
+    },
+    {
+      "route": "/seller?tab=orders",
+      "statuses": [
+        200
+      ],
+      "firstMs": 24.3,
+      "medianMs": 23.5,
+      "p95Ms": 46.5,
+      "medianTtfbMs": 21.8,
+      "bytes": 27263
+    },
+    {
+      "route": "/checkout?id=new-balance-2022r",
+      "statuses": [
+        200
+      ],
+      "firstMs": 54.3,
+      "medianMs": 42.4,
+      "p95Ms": 47.2,
+      "medianTtfbMs": 39.4,
+      "bytes": 46644
+    },
+    {
+      "route": "/api/products?summary=1",
+      "statuses": [
+        200
+      ],
+      "firstMs": 48.5,
+      "medianMs": 15.1,
+      "p95Ms": 19.1,
+      "medianTtfbMs": 14.9,
+      "bytes": 11607
+    },
+    {
+      "route": "/api/seller/orders?sellerId=usr_002&tab=PERLU_KONFIRMASI",
+      "statuses": [
+        200
+      ],
+      "firstMs": 15.6,
+      "medianMs": 16.4,
+      "p95Ms": 19.7,
+      "medianTtfbMs": 16.1,
+      "bytes": 102
+    },
+    {
+      "route": "/api/seller/store?userId=usr_002",
+      "statuses": [
+        200
+      ],
+      "firstMs": 15.5,
+      "medianMs": 14.9,
+      "p95Ms": 21.5,
+      "medianTtfbMs": 14.5,
+      "bytes": 2600
+    },
+    {
+      "route": "/api/wallet?summary=1",
+      "statuses": [
+        200
+      ],
+      "firstMs": 18.1,
+      "medianMs": 15.5,
+      "p95Ms": 20.6,
+      "medianTtfbMs": 15.1,
+      "bytes": 53
+    },
+    {
+      "route": "/api/activity",
+      "statuses": [
+        200
+      ],
+      "firstMs": 29.4,
+      "medianMs": 12.5,
+      "p95Ms": 17.5,
+      "medianTtfbMs": 12.2,
+      "bytes": 31
+    }
+  ],
+  "sql": [
+    {
+      "name": "database round trip",
+      "medianRoundTripMs": 0.7,
+      "planningMs": 0.02,
+      "executionMs": 0.012,
+      "plan": {
+        "Node Type": "Result",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Startup Cost": 0,
+        "Total Cost": 0.01,
+        "Plan Rows": 1,
+        "Plan Width": 4,
+        "Actual Startup Time": 0.001,
+        "Actual Total Time": 0.002,
+        "Actual Rows": 1,
+        "Actual Loops": 1,
+        "Shared Hit Blocks": 0,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0
+      }
+    },
+    {
+      "name": "buyer orders",
+      "medianRoundTripMs": 0.8,
+      "planningMs": 0.095,
+      "executionMs": 0.047,
+      "plan": {
+        "Node Type": "Limit",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Startup Cost": 3.15,
+        "Total Cost": 3.15,
+        "Plan Rows": 1,
+        "Plan Width": 37,
+        "Actual Startup Time": 0.03,
+        "Actual Total Time": 0.032,
+        "Actual Rows": 4,
+        "Actual Loops": 1,
+        "Shared Hit Blocks": 3,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0,
+        "Plans": [
+          {
+            "Node Type": "Sort",
+            "Parent Relationship": "Outer",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 3.15,
+            "Total Cost": 3.15,
+            "Plan Rows": 1,
+            "Plan Width": 37,
+            "Actual Startup Time": 0.029,
+            "Actual Total Time": 0.03,
+            "Actual Rows": 4,
+            "Actual Loops": 1,
+            "Sort Key": [
+              "created_at DESC"
+            ],
+            "Sort Method": "quicksort",
+            "Sort Space Used": 25,
+            "Sort Space Type": "Memory",
+            "Shared Hit Blocks": 3,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Seq Scan",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Relation Name": "orders",
+                "Alias": "orders",
+                "Startup Cost": 0,
+                "Total Cost": 3.14,
+                "Plan Rows": 1,
+                "Plan Width": 37,
+                "Actual Startup Time": 0.017,
+                "Actual Total Time": 0.023,
+                "Actual Rows": 4,
+                "Actual Loops": 1,
+                "Filter": "((user_id)::text = 'usr_001'::text)",
+                "Rows Removed by Filter": 11,
+                "Shared Hit Blocks": 3,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "seller legacy name OR query",
+      "medianRoundTripMs": 0.5,
+      "planningMs": 0.095,
+      "executionMs": 0.027,
+      "plan": {
+        "Node Type": "Sort",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Startup Cost": 3.2,
+        "Total Cost": 3.21,
+        "Plan Rows": 1,
+        "Plan Width": 30,
+        "Actual Startup Time": 0.016,
+        "Actual Total Time": 0.016,
+        "Actual Rows": 0,
+        "Actual Loops": 1,
+        "Sort Key": [
+          "created_at DESC"
+        ],
+        "Sort Method": "quicksort",
+        "Sort Space Used": 25,
+        "Sort Space Type": "Memory",
+        "Shared Hit Blocks": 3,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0,
+        "Plans": [
+          {
+            "Node Type": "Seq Scan",
+            "Parent Relationship": "Outer",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Relation Name": "orders",
+            "Alias": "orders",
+            "Startup Cost": 0,
+            "Total Cost": 3.19,
+            "Plan Rows": 1,
+            "Plan Width": 30,
+            "Actual Startup Time": 0.013,
+            "Actual Total Time": 0.013,
+            "Actual Rows": 0,
+            "Actual Loops": 1,
+            "Filter": "(((status)::text = 'SEDANG_DIKEMAS'::text) AND (((seller_id)::text = 'usr_002'::text) OR (seller_name ~~* '%Steven Christian%'::text)))",
+            "Rows Removed by Filter": 15,
+            "Shared Hit Blocks": 3,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "catalog",
+      "medianRoundTripMs": 0.3,
+      "planningMs": 0.053,
+      "executionMs": 0.028,
+      "plan": {
+        "Node Type": "Sort",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Startup Cost": 2.34,
+        "Total Cost": 2.37,
+        "Plan Rows": 12,
+        "Plan Width": 94,
+        "Actual Startup Time": 0.017,
+        "Actual Total Time": 0.017,
+        "Actual Rows": 12,
+        "Actual Loops": 1,
+        "Sort Key": [
+          "created_at DESC"
+        ],
+        "Sort Method": "quicksort",
+        "Sort Space Used": 26,
+        "Sort Space Type": "Memory",
+        "Shared Hit Blocks": 2,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0,
+        "Plans": [
+          {
+            "Node Type": "Seq Scan",
+            "Parent Relationship": "Outer",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Relation Name": "products",
+            "Alias": "products",
+            "Startup Cost": 0,
+            "Total Cost": 2.12,
+            "Plan Rows": 12,
+            "Plan Width": 94,
+            "Actual Startup Time": 0.007,
+            "Actual Total Time": 0.011,
+            "Actual Rows": 12,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 2,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "address lookup",
+      "medianRoundTripMs": 0.3,
+      "planningMs": 0.044,
+      "executionMs": 0.024,
+      "plan": {
+        "Node Type": "Limit",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Startup Cost": 1.05,
+        "Total Cost": 1.05,
+        "Plan Rows": 1,
+        "Plan Width": 26,
+        "Actual Startup Time": 0.008,
+        "Actual Total Time": 0.009,
+        "Actual Rows": 1,
+        "Actual Loops": 1,
+        "Shared Hit Blocks": 1,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0,
+        "Plans": [
+          {
+            "Node Type": "Sort",
+            "Parent Relationship": "Outer",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 1.05,
+            "Total Cost": 1.05,
+            "Plan Rows": 1,
+            "Plan Width": 26,
+            "Actual Startup Time": 0.008,
+            "Actual Total Time": 0.008,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Sort Key": [
+              "is_shop_address DESC",
+              "is_primary DESC",
+              "updated_at DESC"
+            ],
+            "Sort Method": "quicksort",
+            "Sort Space Used": 25,
+            "Sort Space Type": "Memory",
+            "Shared Hit Blocks": 1,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Seq Scan",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Relation Name": "user_addresses",
+                "Alias": "user_addresses",
+                "Startup Cost": 0,
+                "Total Cost": 1.04,
+                "Plan Rows": 1,
+                "Plan Width": 26,
+                "Actual Startup Time": 0.005,
+                "Actual Total Time": 0.006,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Filter": "((is_shop_address OR is_primary) AND ((user_id)::text = 'usr_002'::text))",
+                "Rows Removed by Filter": 2,
+                "Shared Hit Blocks": 1,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "concurrency": [
+    {
+      "concurrency": 1,
+      "requests": 40,
+      "errors": 0,
+      "p50Ms": 15.7,
+      "p95Ms": 20.8,
+      "rps": 65.2
+    },
+    {
+      "concurrency": 5,
+      "requests": 40,
+      "errors": 0,
+      "p50Ms": 23.8,
+      "p95Ms": 33.3,
+      "rps": 226.5
+    },
+    {
+      "concurrency": 10,
+      "requests": 40,
+      "errors": 0,
+      "p50Ms": 21.4,
+      "p95Ms": 137.9,
+      "rps": 252.3
+    },
+    {
+      "concurrency": 20,
+      "requests": 40,
+      "errors": 0,
+      "p50Ms": 42.3,
+      "p95Ms": 192.1,
+      "rps": 162.3
+    }
+  ],
+  "dataset": {
+    "products": 12,
+    "orders": 15,
+    "users": 15
+  },
+  "indexes": [
+    {
+      "tablename": "admin_audit",
+      "indexname": "admin_audit_pkey",
+      "indexdef": "CREATE UNIQUE INDEX admin_audit_pkey ON public.admin_audit USING btree (id)"
+    },
+    {
+      "tablename": "auth_sessions",
+      "indexname": "auth_sessions_pkey",
+      "indexdef": "CREATE UNIQUE INDEX auth_sessions_pkey ON public.auth_sessions USING btree (token_hash)"
+    },
+    {
+      "tablename": "cart_items",
+      "indexname": "cart_items_pkey",
+      "indexdef": "CREATE UNIQUE INDEX cart_items_pkey ON public.cart_items USING btree (user_id, product_id)"
+    },
+    {
+      "tablename": "chat_conversations",
+      "indexname": "chat_conversations_pkey",
+      "indexdef": "CREATE UNIQUE INDEX chat_conversations_pkey ON public.chat_conversations USING btree (id)"
+    },
+    {
+      "tablename": "chat_conversations",
+      "indexname": "chat_conversations_user1_id_user2_id_key",
+      "indexdef": "CREATE UNIQUE INDEX chat_conversations_user1_id_user2_id_key ON public.chat_conversations USING btree (user1_id, user2_id)"
+    },
+    {
+      "tablename": "chat_conversations",
+      "indexname": "idx_chat_conv_users",
+      "indexdef": "CREATE INDEX idx_chat_conv_users ON public.chat_conversations USING btree (user1_id, user2_id)"
+    },
+    {
+      "tablename": "chat_messages",
+      "indexname": "chat_messages_pkey",
+      "indexdef": "CREATE UNIQUE INDEX chat_messages_pkey ON public.chat_messages USING btree (id)"
+    },
+    {
+      "tablename": "chat_messages",
+      "indexname": "idx_chat_messages_conv",
+      "indexdef": "CREATE INDEX idx_chat_messages_conv ON public.chat_messages USING btree (conversation_id, created_at)"
+    },
+    {
+      "tablename": "chat_messages",
+      "indexname": "idx_chat_msg_conv_created",
+      "indexdef": "CREATE INDEX idx_chat_msg_conv_created ON public.chat_messages USING btree (conversation_id, created_at)"
+    },
+    {
+      "tablename": "chat_messages",
+      "indexname": "idx_chat_msg_unread",
+      "indexdef": "CREATE INDEX idx_chat_msg_unread ON public.chat_messages USING btree (conversation_id, receiver_id, is_read)"
+    },
+    {
+      "tablename": "coin_transactions",
+      "indexname": "coin_transactions_pkey",
+      "indexdef": "CREATE UNIQUE INDEX coin_transactions_pkey ON public.coin_transactions USING btree (id)"
+    },
+    {
+      "tablename": "coin_transactions",
+      "indexname": "idx_coin_tx_user_created",
+      "indexdef": "CREATE INDEX idx_coin_tx_user_created ON public.coin_transactions USING btree (user_id, created_at DESC)"
+    },
+    {
+      "tablename": "notifications",
+      "indexname": "notifications_pkey",
+      "indexdef": "CREATE UNIQUE INDEX notifications_pkey ON public.notifications USING btree (id)"
+    },
+    {
+      "tablename": "notifications",
+      "indexname": "notifications_user_created_idx",
+      "indexdef": "CREATE INDEX notifications_user_created_idx ON public.notifications USING btree (user_id, created_at DESC)"
+    },
+    {
+      "tablename": "orders",
+      "indexname": "idx_orders_product_status",
+      "indexdef": "CREATE INDEX idx_orders_product_status ON public.orders USING btree (product_id, status)"
+    },
+    {
+      "tablename": "orders",
+      "indexname": "idx_orders_seller_status_created",
+      "indexdef": "CREATE INDEX idx_orders_seller_status_created ON public.orders USING btree (seller_id, status, created_at DESC)"
+    },
+    {
+      "tablename": "orders",
+      "indexname": "idx_orders_status_created",
+      "indexdef": "CREATE INDEX idx_orders_status_created ON public.orders USING btree (status, created_at)"
+    },
+    {
+      "tablename": "orders",
+      "indexname": "idx_orders_user_created",
+      "indexdef": "CREATE INDEX idx_orders_user_created ON public.orders USING btree (user_id, created_at DESC)"
+    },
+    {
+      "tablename": "orders",
+      "indexname": "orders_pkey",
+      "indexdef": "CREATE UNIQUE INDEX orders_pkey ON public.orders USING btree (order_id)"
+    },
+    {
+      "tablename": "products",
+      "indexname": "idx_products_category",
+      "indexdef": "CREATE INDEX idx_products_category ON public.products USING btree (category)"
+    },
+    {
+      "tablename": "products",
+      "indexname": "idx_products_created_at",
+      "indexdef": "CREATE INDEX idx_products_created_at ON public.products USING btree (created_at DESC)"
+    },
+    {
+      "tablename": "products",
+      "indexname": "idx_products_seller_created",
+      "indexdef": "CREATE INDEX idx_products_seller_created ON public.products USING btree (seller_id, created_at DESC)"
+    },
+    {
+      "tablename": "products",
+      "indexname": "products_pkey",
+      "indexdef": "CREATE UNIQUE INDEX products_pkey ON public.products USING btree (id)"
+    },
+    {
+      "tablename": "reviews",
+      "indexname": "reviews_order_id_unique_idx",
+      "indexdef": "CREATE UNIQUE INDEX reviews_order_id_unique_idx ON public.reviews USING btree (order_id) WHERE (order_id IS NOT NULL)"
+    },
+    {
+      "tablename": "reviews",
+      "indexname": "reviews_pkey",
+      "indexdef": "CREATE UNIQUE INDEX reviews_pkey ON public.reviews USING btree (id)"
+    },
+    {
+      "tablename": "reviews",
+      "indexname": "reviews_product_id_idx",
+      "indexdef": "CREATE INDEX reviews_product_id_idx ON public.reviews USING btree (product_id, created_at DESC)"
+    },
+    {
+      "tablename": "reviews",
+      "indexname": "reviews_seller_id_idx",
+      "indexdef": "CREATE INDEX reviews_seller_id_idx ON public.reviews USING btree (seller_id, created_at DESC)"
+    },
+    {
+      "tablename": "seller_cod_locations",
+      "indexname": "idx_cod_locations_seller_id",
+      "indexdef": "CREATE INDEX idx_cod_locations_seller_id ON public.seller_cod_locations USING btree (seller_id, id)"
+    },
+    {
+      "tablename": "seller_cod_locations",
+      "indexname": "seller_cod_locations_pkey",
+      "indexdef": "CREATE UNIQUE INDEX seller_cod_locations_pkey ON public.seller_cod_locations USING btree (id)"
+    },
+    {
+      "tablename": "stores",
+      "indexname": "stores_pkey",
+      "indexdef": "CREATE UNIQUE INDEX stores_pkey ON public.stores USING btree (id)"
+    },
+    {
+      "tablename": "stores",
+      "indexname": "stores_user_id_key",
+      "indexdef": "CREATE UNIQUE INDEX stores_user_id_key ON public.stores USING btree (user_id)"
+    },
+    {
+      "tablename": "user_addresses",
+      "indexname": "idx_user_addresses_lookup",
+      "indexdef": "CREATE INDEX idx_user_addresses_lookup ON public.user_addresses USING btree (user_id, is_primary DESC, is_shop_address DESC, created_at DESC)"
+    },
+    {
+      "tablename": "user_addresses",
+      "indexname": "user_addresses_pkey",
+      "indexdef": "CREATE UNIQUE INDEX user_addresses_pkey ON public.user_addresses USING btree (id)"
+    },
+    {
+      "tablename": "user_coins",
+      "indexname": "user_coins_pkey",
+      "indexdef": "CREATE UNIQUE INDEX user_coins_pkey ON public.user_coins USING btree (user_id)"
+    },
+    {
+      "tablename": "user_wallets",
+      "indexname": "user_wallets_pkey",
+      "indexdef": "CREATE UNIQUE INDEX user_wallets_pkey ON public.user_wallets USING btree (user_id)"
+    },
+    {
+      "tablename": "users",
+      "indexname": "users_email_key",
+      "indexdef": "CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email)"
+    },
+    {
+      "tablename": "users",
+      "indexname": "users_pkey",
+      "indexdef": "CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)"
+    },
+    {
+      "tablename": "wallet_requests",
+      "indexname": "wallet_requests_pkey",
+      "indexdef": "CREATE UNIQUE INDEX wallet_requests_pkey ON public.wallet_requests USING btree (id)"
+    },
+    {
+      "tablename": "wallet_requests",
+      "indexname": "wallet_requests_queue",
+      "indexdef": "CREATE INDEX wallet_requests_queue ON public.wallet_requests USING btree (status, created_at)"
+    },
+    {
+      "tablename": "wallet_requests",
+      "indexname": "wallet_requests_user_id_idempotency_key_key",
+      "indexdef": "CREATE UNIQUE INDEX wallet_requests_user_id_idempotency_key_key ON public.wallet_requests USING btree (user_id, idempotency_key)"
+    },
+    {
+      "tablename": "wallet_transactions",
+      "indexname": "idx_wallet_tx_user_created",
+      "indexdef": "CREATE INDEX idx_wallet_tx_user_created ON public.wallet_transactions USING btree (user_id, created_at DESC)"
+    },
+    {
+      "tablename": "wallet_transactions",
+      "indexname": "wallet_transactions_pkey",
+      "indexdef": "CREATE UNIQUE INDEX wallet_transactions_pkey ON public.wallet_transactions USING btree (id)"
+    }
+  ]
+}

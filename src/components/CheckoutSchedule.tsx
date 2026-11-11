@@ -1,0 +1,21 @@
+"use client";
+import {useEffect,useState} from "react";
+import {jakartaDate,scheduleError} from "@/lib/checkout-rules";
+
+export default function CheckoutSchedule({day,time,notes,onDay,onTime,onNotes}:{day:string;time:string;notes:string;onDay:(value:string)=>void;onTime:(value:string)=>void;onNotes:(value:string)=>void}){
+ const [now,setNow]=useState(()=>new Date()),[open,setOpen]=useState(false),[step,setStep]=useState<'hour'|'minute'>('hour');
+ useEffect(()=>{const timer=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(timer);},[]);
+ const [hour,minute]=(time||'00:00').split(':');
+ const available=(h:string,m:string)=>!scheduleError(day,`${h}:${m}`,now);
+ const error=scheduleError(day,time,now);
+ return <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
+ <h3 className="text-sm font-semibold text-gray-900">Jadwal Serah-Terima</h3>
+ <div className="grid gap-4 sm:grid-cols-2"><div><label htmlFor="handover-day" className="mb-2 block text-xs font-semibold text-gray-800">Pilih Hari</label><input id="handover-day" type="date" value={day} min={jakartaDate(now)} max={jakartaDate(now,2)} onChange={event=>onDay(event.target.value)} className="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm" /><div className="mt-2 flex gap-2">{['Hari Ini','Besok','Lusa'].map((label,index)=><button key={label} type="button" onClick={()=>onDay(jakartaDate(now,index))} className={`rounded-lg border px-3 py-1.5 text-xs ${day===jakartaDate(now,index)?'border-[#03AC0E] bg-[#EBF8EE] text-[#03AC0E]':'border-gray-200 bg-white text-gray-600'}`}>{label}</button>)}</div></div>
+ <div className="relative"><label className="mb-2 block text-xs font-semibold text-gray-800">Pilih Waktu (WIB)</label><button type="button" aria-expanded={open} onClick={()=>{setOpen(!open);setStep('hour');}} className="w-full rounded-xl border border-gray-300 bg-white p-3 text-left text-sm">{time||'Pilih waktu'}</button>
+ {open&&<div className="absolute right-0 top-full z-30 mt-2 w-80 max-w-[85vw] rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"><div className="mb-4 flex items-center justify-between"><span className="text-xs text-gray-500">Waktu Dipilih</span><div className="flex items-center gap-2 font-mono font-bold"><button type="button" onClick={()=>setStep('hour')} className={`rounded-lg p-2 ${step==='hour'?'bg-[#03AC0E] text-white':'bg-gray-100'}`}>{hour}</button>:<button type="button" onClick={()=>setStep('minute')} className={`rounded-lg p-2 ${step==='minute'?'bg-[#03AC0E] text-white':'bg-gray-100'}`}>{minute}</button><span className="text-xs text-gray-500">WIB</span></div></div>
+ <p className="mb-2 text-xs font-semibold text-gray-700">{step==='hour'?'Pilih Jam (00 - 23)':'Pilih Menit (00 - 59)'}</p><div className="grid max-h-60 grid-cols-6 gap-1.5 overflow-y-auto">{Array.from({length:step==='hour'?24:60},(_,i)=>String(i).padStart(2,'0')).map(value=>{const disabled=step==='hour'?!available(value,'59'):!available(hour,value);const selected=value===(step==='hour'?hour:minute);return <button key={value} type="button" disabled={disabled} onClick={()=>{if(step==='hour'){const m=available(value,minute)?minute:Array.from({length:60},(_,i)=>String(i).padStart(2,'0')).find(m=>available(value,m))||'00';onTime(`${value}:${m}`);setStep('minute');}else{onTime(`${hour}:${value}`);setOpen(false);}}} className={`rounded-lg border py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-25 ${selected?'border-[#03AC0E] bg-[#03AC0E] text-white':'border-gray-200 bg-gray-50 text-gray-700'}`}>{value}</button>;})}</div><div className="mt-3 flex justify-end"><button type="button" disabled={!!error} onClick={()=>setOpen(false)} className="rounded-lg bg-[#03AC0E] px-4 py-2 text-xs font-semibold text-white disabled:opacity-40">Selesai</button></div></div>}
+ </div></div>
+ {day&&time&&error&&<p role="alert" className="text-xs text-red-600">{error}</p>}
+ <label className="block text-xs font-semibold text-gray-800">Catatan Tambahan (Opsional)<textarea value={notes} onChange={event=>onNotes(event.target.value)} rows={2} placeholder="Tambahkan petunjuk serah-terima bila diperlukan" className="mt-2 w-full rounded-xl border border-gray-300 bg-white p-3 text-sm font-normal" /></label>
+ </div>;
+}
