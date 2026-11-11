@@ -10,9 +10,12 @@ export const metadata: Metadata = {
   title: "TryPedia - Marketplace Sewa ke Beli (Rent to Own) Pertama di Jember",
   description: "Platform marketplace jual beli barang bekas dengan konsep Rent to Own di Jember. Coba dulu sewa barangnya, biaya sewa langsung memotong harga beli!",
   icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
-    apple: "/favicon.png",
+    icon: [
+      { url: "/favicon.png?v=2", type: "image/png" },
+      { url: "/favicon.ico?v=2" },
+    ],
+    shortcut: "/favicon.png?v=2",
+    apple: "/apple-touch-icon.png?v=2",
   },
 };
 
